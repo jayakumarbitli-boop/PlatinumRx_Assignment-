@@ -1,0 +1,6 @@
+def convert_minutes(n):
+    hours = n // 60
+    minutes = n % 60
+    return f"{hours} hrs {minutes} minutes"
+
+print(convert_minutes(130)) 
