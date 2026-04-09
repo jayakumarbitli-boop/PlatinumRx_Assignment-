@@ -1,0 +1,9 @@
+def remove_duplicates(input_string):
+    unique_str = ""
+    for char in input_string:
+        if char not in unique_str:
+            unique_str += char
+    return unique_str
+
+n = input()
+print(remove_duplicates(n)) 
