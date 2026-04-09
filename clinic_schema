@@ -1,63 +1,30 @@
--- 1. Revenue by channel
-SELECT sales_channel, SUM(amount)
-FROM clinic_sales
-GROUP BY sales_channel;
+CREATE TABLE clinics (
+    cid VARCHAR(50) PRIMARY KEY,
+    clinic_name VARCHAR(100),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    country VARCHAR(50)
+);
 
--- 2. Top 10 customers
-SELECT uid, SUM(amount) AS total_spent
-FROM clinic_sales
-GROUP BY uid
-ORDER BY total_spent DESC
-LIMIT 10;
+CREATE TABLE customer (
+    uid VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100),
+    mobile VARCHAR(20)
+);
 
--- 3. Profit / loss monthly
-WITH r AS (
-    SELECT DATE_FORMAT(datetime,'%Y-%m') m, SUM(amount) revenue
-    FROM clinic_sales GROUP BY m
-),
-e AS (
-    SELECT DATE_FORMAT(datetime,'%Y-%m') m, SUM(amount) expense
-    FROM expenses GROUP BY m
-)
-SELECT 
-    r.m,
-    r.revenue,
-    e.expense,
-    (r.revenue - e.expense) AS profit,
-    CASE WHEN (r.revenue - e.expense)>=0 THEN 'PROFITABLE'
-    ELSE 'LOSS' END AS status
-FROM r LEFT JOIN e ON r.m=e.m;
+CREATE TABLE clinic_sales (
+    oid VARCHAR(50),
+    uid VARCHAR(50),
+    cid VARCHAR(50),
+    amount DECIMAL(10,2),
+    datetime DATETIME,
+    sales_channel VARCHAR(50)
+);
 
--- 4. Most profitable clinic per city
-WITH p AS (
-    SELECT c.city, c.cid,
-    SUM(cs.amount)-COALESCE(SUM(e.amount),0) AS profit,
-    DATE_FORMAT(cs.datetime,'%Y-%m') m
-    FROM clinics c
-    JOIN clinic_sales cs ON c.cid=cs.cid
-    LEFT JOIN expenses e ON c.cid=e.cid
-    GROUP BY c.city,c.cid,m
-),
-r AS (
-    SELECT *,
-    RANK() OVER (PARTITION BY city,m ORDER BY profit DESC) rnk
-    FROM p
-)
-SELECT * FROM r WHERE rnk=1;
-
--- 5. Second least profitable clinic
-WITH p AS (
-    SELECT c.state, c.cid,
-    SUM(cs.amount)-COALESCE(SUM(e.amount),0) AS profit,
-    DATE_FORMAT(cs.datetime,'%Y-%m') m
-    FROM clinics c
-    JOIN clinic_sales cs ON c.cid=cs.cid
-    LEFT JOIN expenses e ON c.cid=e.cid
-    GROUP BY c.state,c.cid,m
-),
-r AS (
-    SELECT *,
-    DENSE_RANK() OVER (PARTITION BY state,m ORDER BY profit ASC) rnk
-    FROM p
-)
-SELECT * FROM r WHERE rnk=2;
+CREATE TABLE expenses (
+    eid VARCHAR(50),
+    cid VARCHAR(50),
+    description TEXT,
+    amount DECIMAL(10,2),
+    datetime DATETIME
+);
